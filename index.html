@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>命理人格 · 纳音与卦象</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(160deg, #1a1410 0%, #2a1f18 100%);
+    min-height: 100vh; display: flex; justify-content: center;
+    align-items: flex-start; padding: 20px 14px; color: #e8dcc8;
+  }
+  .card {
+    background: #241c15; border-radius: 20px; max-width: 440px;
+    width: 100%; padding: 28px 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    border: 1px solid #3a2e22;
+  }
+  h1 { font-size: 21px; text-align: center; margin-bottom: 6px; color: #f0e0c0; letter-spacing: 1px; }
+  .sub { font-size: 13px; text-align: center; color: #8a7a60; margin-bottom: 24px; }
+  .year-input {
+    width: 100%; padding: 14px; font-size: 18px; text-align: center;
+    background: #2e241a; border: 1.5px solid #4a3a28; border-radius: 12px;
+    color: #f0e0c0; margin-bottom: 10px; letter-spacing: 2px;
+  }
+  .year-input:focus { outline: none; border-color: #b8860b; }
+  .hint { font-size: 12px; color: #8a7a60; text-align: center; margin-bottom: 16px; }
+  .btn {
+    display: block; width: 100%; padding: 14px;
+    background: linear-gradient(90deg, #8b6914, #b8860b);
+    color: #1a1410; border: none; border-radius: 12px;
+    font-size: 15px; font-weight: 600; cursor: pointer; margin-bottom: 12px;
+  }
+  .btn:active { opacity: 0.85; }
+  .progress { height: 4px; background: #3a2e22; border-radius: 2px; margin-bottom: 20px; overflow: hidden; }
+  .progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #8b6914, #d4a017); transition: width 0.3s; }
+  .question { font-size: 16px; line-height: 1.6; margin-bottom: 18px; color: #f0e0c0; }
+  .option {
+    display: block; width: 100%; padding: 14px 16px; margin-bottom: 10px;
+    border: 1.5px solid #4a3a28; background: #2e241a; border-radius: 12px;
+    font-size: 14px; color: #d8c8a8; text-align: left; cursor: pointer;
+    transition: all 0.2s; line-height: 1.4;
+  }
+  .option:hover { border-color: #b8860b; background: #3a2e1e; }
+  .option:active { transform: scale(0.98); }
+  .hidden { display: none; }
+  .result-title { font-size: 24px; text-align: center; color: #f0e0c0; margin-bottom: 6px; letter-spacing: 1px; }
+  .result-meta { font-size: 13px; text-align: center; color: #b8860b; margin-bottom: 14px; }
+  .result-sub { font-size: 15px; text-align: center; color: #d4a017; margin-bottom: 18px; }
+  .result-desc { font-size: 14px; line-height: 1.8; color: #c8b898; margin-bottom: 16px; text-align: justify; }
+  .result-desc strong { color: #d4a017; font-weight: 600; }
+  details.science {
+    background: #2a2018; border: 1px solid #3a2e22; border-radius: 10px;
+    padding: 12px 14px; margin-bottom: 10px; font-size: 13px; color: #a89878;
+  }
+  details.science summary { cursor: pointer; color: #b8860b; font-weight: 600; list-style: none; }
+  details.science summary::-webkit-details-marker { display: none; }
+  details.science summary::before { content: "▸ "; }
+  details.science[open] summary::before { content: "▾ "; }
+  details.science p { margin-top: 10px; line-height: 1.7; text-align: justify; }
+  .share-btn {
+    display: block; width: 100%; padding: 14px;
+    background: linear-gradient(90deg, #8b6914, #b8860b);
+    color: #1a1410; border: none; border-radius: 12px;
+    font-size: 15px; font-weight: 600; cursor: pointer; margin: 16px 0 12px;
+  }
+  .restart { display: block; width: 100%; background: none; border: 1.5px solid #4a3a28; color: #8a7a60; padding: 12px; border-radius: 12px; font-size: 14px; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div id="intro">
+    <h1>命理人格</h1>
+    <p class="sub">纳音定命底，三爻起卦象</p>
+    <input id="year-input" class="year-input" type="number" placeholder="输入出生年份" min="1970" max="2026">
+    <p class="hint">支持 1970 — 2026 年</p>
+    <button class="btn" id="start-btn">起 卦</button>
+  </div>
+
+  <div id="quiz" class="hidden">
+    <div class="progress"><div class="progress-bar" id="bar"></div></div>
+    <div id="q-text" class="question"></div>
+    <div id="options"></div>
+  </div>
+
+  <div id="result" class="hidden">
+    <div class="result-title" id="r-title"></div>
+    <div class="result-meta" id="r-meta"></div>
+    <div class="result-sub" id="r-sub"></div>
+    <div class="result-desc" id="r-nayin"></div>
+    <div class="result-desc" id="r-gua"></div>
+
+    <details class="science">
+      <summary>什么是六十甲子和纳音？</summary>
+      <p>天干 10 个、地支 12 个，如果随意两两配对是 120 种，但传统规则只取阴阳属性一致的组合：阳干配阳支、阴干配阴支，同时往前推。天干走 6 轮、地支走 5 轮，在第 60 组“癸亥”同时回到起点，完成一个循环。这 60 组就是“六十甲子”。每一组干支对应一个“纳音”，比如“甲子、乙丑”是海中金，“戊辰、己巳”是大林木。纳音不是普通五行，它更像一个“命的质地”——同样是木，大林木是成片生长的林子，杨柳木是柔软易折的枝条。你的纳音来自出生年份，是这个测试里“命底”的部分。</p>
+    </details>
+
+    <details class="science">
+      <summary>什么是八卦和起卦？</summary>
+      <p>八卦由三爻组成，每爻分阴（--）和阳（—）。三爻从下往上叠，一共 2×2×2=8 种组合，对应乾、坤、离、震、坎、艮、巽、兑八个卦。这个测试的“起卦”方式很简单：三道题分别对应初爻、二爻、三爻，选 A 为阴、选 B 为阳，三题选完就得到一个卦。它不涉及真实的生辰八字排盘，是一套娱乐化的简化规则——出生年份给你“命底”（纳音），三道题给你“性格卦”（八卦），合起来就是你的结果。</p>
+    </details>
+
+    <button class="share-btn" id="share">分享结果</button>
+    <button class="restart" id="restart">再测一次</button>
+  </div>
+</div>
+
+<script>
+// 六十甲子表：1984 为甲子，索引 0
+// 每组：干支、生肖、纳音
+const jiazi = [
+  ["甲子","鼠","海中金"],["乙丑","牛","海中金"],["丙寅","虎","炉中火"],["丁卯","兔","炉中火"],
+  ["戊辰","龙","大林木"],["己巳","蛇","大林木"],["庚午","马","路旁土"],["辛未","羊","路旁土"],
+  ["壬申","猴","剑锋金"],["癸酉","鸡","剑锋金"],["甲戌","狗","山头火"],["乙亥","猪","山头火"],
+  ["丙子","鼠","涧下水"],["丁丑","牛","涧下水"],["戊寅","虎","城头土"],["己卯","兔","城头土"],
+  ["庚辰","龙","白蜡金"],["辛巳","蛇","白蜡金"],["壬午","马","杨柳木"],["癸未","羊","杨柳木"],
+  ["甲申","猴","泉中水"],["乙酉","鸡","泉中水"],["丙戌","狗","屋上土"],["丁亥","猪","屋上土"],
+  ["戊子","鼠","霹雳火"],["己丑","牛","霹雳火"],["庚寅","虎","松柏木"],["辛卯","兔","松柏木"],
+  ["壬辰","龙","长流水"],["癸巳","蛇","长流水"],["甲午","马","沙中金"],["乙未","羊","沙中金"],
+  ["丙申","猴","山下火"],["丁酉","鸡","山下火"],["戊戌","狗","平地木"],["己亥","猪","平地木"],
+  ["庚子","鼠","壁上土"],["辛丑","牛","壁上土"],["壬寅","虎","金箔金"],["癸卯","兔","金箔金"],
+  ["甲辰","龙","覆灯火"],["乙巳","蛇","覆灯火"],["丙午","马","天河水"],["丁未","羊","天河水"],
+  ["戊申","猴","大驿土"],["己酉","鸡","大驿土"],["庚戌","狗","钗钏金"],["辛亥","猪","钗钏金"],
+  ["壬子","鼠","桑柘木"],["癸丑","牛","桑柘木"],["甲寅","虎","大溪水"],["乙卯","兔","大溪水"],
+  ["丙辰","龙","沙中土"],["丁巳","蛇","沙中土"],["戊午","马","天上火"],["己未","羊","天上火"],
+  ["庚申","猴","石榴木"],["辛酉","鸡","石榴木"],["壬戌","狗","大海水"],["癸亥","猪","大海水"]
+];
+
+const nayinDesc = {
+  "海中金":"金藏于海，不见其光，其重自在。主性沉，不轻易示人底牌。器成于晚，遇水不腐，遇火不熔。你不是一眼之金，是久处方知深浅之金。",
+  "炉中火":"火在炉中，得炉则明，失炉则熄。主性烈而有待，非无热，是未遇可烧之物。器成于专，一事一人一志，可尽其焰。",
+  "大林木":"木成于林，先根后势，不争一时之秀。主性厚而能容，立定则难摇。器成于渐，非暴长之木，乃可久依之荫。",
+  "路旁土":"土在道旁，载人来往，不言其功。主性承而忘己，惯为他人之基。器成于守，守人守事，亦当知自守。",
+  "剑锋金":"金成剑锋，锐气自见。主性决，言出有分量，不喜迂回。器成于磨，锋可伤人，亦可护人，在其所向。",
+  "山头火":"火在山头，远望则明，近之难留。主性显而不黏，易被见，难被藏。器成于遇，得近火之人，方不孤明。",
+  "涧下水":"水行涧中，清而急，不纳浊。主性净而疾，恶拖泥带水。器成于直，宁绕远而行净路，不肯同流。",
+  "城头土":"土筑城头，守而不迁。主性固，有所守则安，无所守则躁。器成于定，定则人依之，动则人失之。",
+  "白蜡金":"金如白蜡，初成未硬，柔而有待。主性韧而晚成，非烈火所炼，乃岁月所定。器成于时，柔者不折，晚者不碎。",
+  "杨柳木":"木如杨柳，风来则弯，风过则直。主性柔而善全，不争一时之直。器成于韧，弯非屈，是不以硬碰硬。",
+  "泉中水":"水自泉涌，不竭不溢。主性内有源，外不轻露。器成于蓄，看似静，实则未尝空。",
+  "屋上土":"土覆屋上，遮风挡雨。主性护，立一处则人安。器成于庇，所立不高，所护者重。",
+  "霹雳火":"火如霹雳，骤发骤收。主性暴而有断，一念之间可成可毁。器成于择，火无过，过在所焚之处。",
+  "松柏木":"木如松柏，耐寒不凋。主性坚而耐，愈冷愈立。器成于久，不争春，争的是冬后仍在。",
+  "长流水":"水行长流，不急不断。主性缓而持，不以一日之快论成败。器成于续，力在“犹在”，不在“曾猛”。",
+  "沙中金":"金隐沙中，淘而后见。主性藏而待识，不患被埋，患无人认真。器成于遇，遇识者则出，不遇则安于沙。",
+  "山下火":"火伏山下，藏而不耀。主性热而内敛，非冷，是择人而温。器成于藏，藏得住，才给得起。",
+  "平地木":"木生平地，直而好长。主性直，不喜曲，不屑曲。器成于正，正者立得稳，亦易折于风。",
+  "壁上土":"土附壁上，成墙而立。主性有界，不可推，不可越。器成于界，界立则身立，界失则身摇。",
+  "金箔金":"金成箔，薄而贴，细而见质。主性细，长于微处见真章，不以分量压人，以质感留人。器成于精，精者不重，重者不精。",
+  "覆灯火":"火在灯中，照近不照远。主性温而聚，所照者身边数人而已。器成于近，不求遍照，但求照处皆明。",
+  "天河水":"水行天上，落而为雨，泽物而不居。主性高而疏，看得远，想得开，有时失之于近。器成于降，肯落下来，才算真泽。",
+  "大驿土":"土成大驿，通而不滞。主性达，成人之路，亦当自问归处。器成于通，通者不困于人，亦不困于己。",
+  "钗钏金":"金成钗钏，饰而不刃。主性和，锋芒化为光，不伤人而悦人。器成于润，润者不争，争者不润。",
+  "桑柘木":"木如桑柘，实而有用。主性务实，不尚虚华，所成可见，所给可拿。器成于用，有用者不喧，喧者多无用。",
+  "大溪水":"水成大溪，奔而有向。主性动而决，不喜滞，宁行而迷，不坐而明。器成于行，行则有路，坐则无。",
+  "沙中土":"土杂沙中，散而能聚。主性随而不乱，不强求其形，而知所取舍。器成于聚，聚得住，才散得起。",
+  "天上火":"火在天上，照而不灼。主性明而有度，有存在之感，无压迫之形。器成于度，度者，亮而不烫。",
+  "石榴木":"木如石榴，外坚内实。主性藏实于壳，不轻启，启则满。器成于藏，壳非拒人，是待可开之人。",
+  "大海水":"水归大海，容而不争。主性广，能纳事、纳人、纳言。器成于容，容者不争，争者不容。"
+};
+
+// 卦象：索引 = 初爻*4 + 二爻*2 + 上爻，阳=1 阴=0
+const guaTable = [
+  { name:"坤", symbol:"☷", sub:"坤为地 · 厚德载物",
+    desc:"坤为地，厚德载物。你不争，但你在。你擅长承接别人的情绪、烂摊子和没说出口的话。你不靠锋芒立身，靠的是“离了你，事情就是转不动”。你以为自己只是随和，其实你是那个让别人敢放心倒下的人。" },
+  { name:"震", symbol:"☳", sub:"震为雷 · 动而奋起",
+    desc:"震为雷，动而奋起。你是那种平时不响、一响就让人一震的人。你受不了拖泥带水，认定的事会立刻动手。冲动是你的短板，也是你的锋芒——别人还在权衡，你已经做完了一半。" },
+  { name:"坎", symbol:"☵", sub:"坎为水 · 险而有信",
+    desc:"坎为水，险而有信。你心里有一道别人进不去的暗流。你警觉、深沉，不轻易交底，但一旦认了，就比谁都稳。你不是冷漠，你只是习惯了先看清深浅，再决定要不要下水。" },
+  { name:"巽", symbol:"☴", sub:"巽为风 · 入而无孔不入",
+    desc:"巽为风，入而无孔不入。你不正面硬碰，擅长从缝隙里进去。你灵活、会看时机、不执着于一种形态。别人以为你随和，其实你只是找到了更省力的路。风不争，但风能到山到不了的地方。" },
+  { name:"艮", symbol:"☶", sub:"艮为山 · 止而不动",
+    desc:"艮为山，止而不动。你稳、固执、边界感极强。你不轻易改变，也不轻易让人靠近。别人说你倔，你只是知道什么该守。你不动的时候，是在等；你动的时候，是已经想清楚了。" },
+  { name:"离", symbol:"☲", sub:"离为火 · 明而附丽",
+    desc:"离为火，明而附丽。你看得比别人清楚，也因此比别人累。你对虚伪和敷衍有天然的排斥，心里烧着一团火，外表却常常克制。你不是情绪化，你只是对“不对劲”太敏感，藏不住。" },
+  { name:"兑", symbol:"☱", sub:"兑为泽 · 悦而外放",
+    desc:"兑为泽，悦而外放。你善言、外露、有感染力。你走到哪里，气氛就活到哪里。你情绪来得快，去得也快，别人觉得你轻，其实你只是不愿意把沉重挂在脸上。你信的是：先让人舒服，话才有人听。" },
+  { name:"乾", symbol:"☰", sub:"乾为天 · 刚健不息",
+    desc:"乾为天，刚健不息。你是那种不习惯居人下的人，遇事第一反应是“我来”。你信自己的判断多过信运气，宁可硬扛也不愿示弱。别人觉得你强势，你只是觉得，退一步未必海阔天空，可能只是把位置让给了不如你的人。" }
+];
+
+const questions = [
+  { q:"面对重大压力时，你的第一反应更接近？",
+    opts: [
+      { t:"收缩蓄力，等时机再动", v:0 },
+      { t:"正面硬扛，先顶上去", v:1 }
+    ]
+  },
+  { q:"别人最容易从你身上感受到？",
+    opts: [
+      { t:"稳，不太流露情绪", v:0 },
+      { t:"锐，说话做事有棱角", v:1 }
+    ]
+  },
+  { q:"你内心更依赖什么来获得安全感？",
+    opts: [
+      { t:"有一块自己的根基，不被打扰", v:0 },
+      { t:"向外连接，被人需要", v:1 }
+    ]
+  }
+];
+
+let birthYear = 0;
+let current = 0;
+let yao = [0, 0, 0]; // 初、二、上
+
+const introDiv = document.getElementById("intro");
+const quizDiv = document.getElementById("quiz");
+const resultDiv = document.getElementById("result");
+const qText = document.getElementById("q-text");
+const optionsDiv = document.getElementById("options");
+const bar = document.getElementById("bar");
+
+function yearToJiazi(year) {
+  const offset = (year - 1984) % 60;
+  const idx = offset < 0 ? offset + 60 : offset;
+  return jiazi[idx];
+}
+
+function renderQuestion() {
+  const item = questions[current];
+  qText.textContent = item.q;
+  optionsDiv.innerHTML = "";
+  item.opts.forEach(opt => {
+    const btn = document.createElement("button");
+    btn.className = "option";
+    btn.textContent = opt.t;
+    btn.onclick = () => {
+      yao[current] = opt.v;
+      current++;
+      if (current < questions.length) {
+        renderQuestion();
+      } else {
+        showResult();
+      }
+    };
+    optionsDiv.appendChild(btn);
+  });
+  bar.style.width = `${(current / questions.length) * 100}%`;
+}
+
+function showResult() {
+  const [ganzhi, shengxiao, nayin] = yearToJiazi(birthYear);
+  const guaIdx = yao[0] * 4 + yao[1] * 2 + yao[2];
+  const gua = guaTable[guaIdx];
+
+  document.getElementById("r-title").textContent = `${nayin}命 · ${gua.name}卦`;
+  document.getElementById("r-meta").textContent = `${ganzhi}年 · ${shengxiao} · ${nayin}命`;
+  document.getElementById("r-sub").textContent = `${gua.symbol} ${gua.sub}`;
+  document.getElementById("r-nayin").innerHTML = `<strong>命底 · ${nayin}</strong><br>${nayinDesc[nayin]}`;
+  document.getElementById("r-gua").innerHTML = `<strong>卦象 · ${gua.name}卦</strong><br>${gua.desc}`;
+
+  introDiv.classList.add("hidden");
+  quizDiv.classList.add("hidden");
+  resultDiv.classList.remove("hidden");
+  window._shareText = `我是${nayin}命 · ${gua.name}卦。${gua.sub}`;
+}
+
+document.getElementById("start-btn").onclick = () => {
+  const val = parseInt(document.getElementById("year-input").value, 10);
+  if (!val || val < 1970 || val > 2026) {
+    alert("请输入 1970 到 2026 之间的出生年份");
+    return;
+  }
+  birthYear = val;
+  current = 0;
+  yao = [0, 0, 0];
+  introDiv.classList.add("hidden");
+  quizDiv.classList.remove("hidden");
+  renderQuestion();
+};
+
+document.getElementById("share").onclick = async () => {
+  const text = window._shareText || "命理人格测试";
+  if (navigator.share) {
+    try { await navigator.share({ title: "命理人格", text, url: location.href }); } catch (e) {}
+  } else {
+    try {
+      await navigator.clipboard.writeText(`${text} ${location.href}`);
+      alert("结果已复制！");
+    } catch (e) {
+      prompt("复制这段分享：", `${text} ${location.href}`);
+    }
+  }
+};
+
+document.getElementById("restart").onclick = () => {
+  birthYear = 0;
+  current = 0;
+  yao = [0, 0, 0];
+  document.getElementById("year-input").value = "";
+  resultDiv.classList.add("hidden");
+  introDiv.classList.remove("hidden");
+};
+</script>
+</body>
+</html>
